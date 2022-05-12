@@ -3,7 +3,7 @@
 
 
 
-const byte ROWS = 4;
+const byte ROWS = 3;
 const byte COLS = 4;
 
 

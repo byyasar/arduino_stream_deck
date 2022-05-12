@@ -10,25 +10,23 @@
 #include "mykeypad.cpp"
 
 byte menuId = 0;
+byte buton = 0;
 char customKey = ' ';
-
+//#define KEY_F6				0xC7
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 ClickEncoder *encoder; // variable representing the rotary encoder
 int16_t last, value;   // variables for current and last rotation value
 
- byte rowPins[ROWS] = {9, 8, 7, 6};
- byte colPins[COLS] = {5, 4, A4, A5};
+byte rowPins[ROWS] = {7, 6, 5};
+byte colPins[COLS] = {8, 9, 10, 11};
 
 const char hexaKeys[ROWS][COLS] = {
-    {'1', '2', '3', 'A'},
-    {'4', '5', '6', 'B'},
-    {'7', '8', '9', 'C'},
-    {'*', '0', '#', 'D'}};
+    {'+', '-', '-', '-'},
+    {'1', '2', '3', '4'},
+    {'5', '6', '7', '8'}};
 
 Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
-
-
 
 void timerIsr()
 {
@@ -42,21 +40,17 @@ void testdrawchar(byte menuId)
   {
   case 0:
     display.drawBitmap(0, 0, menuoledillustrator, 128, 64, 1);
-   
-  
 
-    
     display.display();
-  
     break;
   case 1:
-    display.drawBitmap(0, 0, menu_kodlama, 128, 64, 1);
+    // display.drawBitmap(0, 0, menu_kodlama, 128, 64, 1);
     break;
   case 2:
-    display.drawBitmap(0, 0, windowslogo, 128, 64, 1);
+    // display.drawBitmap(0, 0, windowslogo, 128, 64, 1);
     break;
   case 3:
-    display.drawBitmap(0, 0, fusion360, 128, 64, 1);
+    // display.drawBitmap(0, 0, fusion360, 128, 64, 1);
     break;
   }
 
@@ -66,23 +60,65 @@ void testdrawchar(byte menuId)
 void oledTextGoster(char basilanTus)
 {
   String tusGorev = "-Bulunamadı -";
-int id =basilanTus - 48;
+  int id = basilanTus - 48;
   switch (menuId)
   {
   case 0:
-  
-    tusGorev=menuOBX[id-1];
+
+    tusGorev = menuOBX[id - 1];
   }
-   
-display.clearDisplay();
-display.setTextSize(1);              // Normal 1:1 pixel scale
-display.setTextColor(SSD1306_WHITE); // Draw white text
-display.setCursor(0, 0);             // Start at top-left corner
-display.print("Tus Gorevi :");
-display.println(tusGorev);
-display.display();
-delay(1000);
-testdrawchar(menuId);
+  /*
+  void Adafruit_GFX::drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
+                                int16_t w, int16_t h, uint16_t color) {
+
+    int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
+    uint8_t byte = 0;
+
+    startWrite();
+    for (int16_t j = 0; j < h; j++, y++) {
+      for (int16_t i = 0; i < w; i++) {
+        if (i & 7)
+          byte <<= 1;
+        else
+          byte = pgm_read_byte(&bitmap[j * byteWidth + i / 8]);
+        if (byte & 0x80)
+          writePixel(x + i, y, color);
+      }
+    }
+    endWrite();
+  }
+
+
+  */
+
+  display.clearDisplay();
+  for (size_t i = 0; i < 32; i++)
+  {
+    for (size_t j = 0; j < 32; j++)
+    {
+      Serial.println(menuoledillustrator[(i * j) + j]);
+
+      if (menuoledillustrator[j * ((32 + 7) / 8) + i / 8] & (1 << (i % 8)))
+      {
+        display.drawPixel(i, j, 1);
+      }
+      else
+      {
+        display.drawPixel(i, j, 0);
+      }
+    }
+  }
+
+  // display.drawBitmap(0, 0, menuoledillustrator, 24, 24, 1);
+
+  display.setTextSize(1);              // Normal 1:1 pixel scale
+  display.setTextColor(SSD1306_WHITE); // Draw white text
+  display.setCursor(65, 30);           // Start at top-left corner
+
+  display.println(tusGorev);
+  display.display();
+  delay(1000);
+  testdrawchar(menuId);
 }
 
 void setup()
@@ -93,16 +129,13 @@ void setup()
     Serial.println(F("SSD1306 allocation failed"));
     for (;;)
       ; // Don't proceed, loop forever
-    // Initializes the media keyboard
   }
-
   Consumer.begin();
   Keyboard.begin();
   encoder = new ClickEncoder(ENCODER_DT, ENCODER_CLK, ENCODER_SW); // Initializes the rotary encoder with the mentioned pins
   Timer1.initialize(1000);                                         // Initializes the timer, which the rotary encoder uses to detect rotation
   Timer1.attachInterrupt(timerIsr);
   last = -1;
-
   testdrawchar(menuId);
 }
 
@@ -116,43 +149,37 @@ void loop()
     Serial.println(customKey);
     switch (menuId)
     {
+
     case 0: // windows kod
       switch (customKey)
       {
-      case '0':                       // shift+left-geri
-        Keyboard.press(KEY_LEFT_GUI); // Command key in Mac, use KEY_LEFT_CTRL for PcCommand key
-        Keyboard.write(KEY_TAB);
-        delay(150);
+      case '+': // shift+left-geri
+
         Keyboard.releaseAll();
-        /*delay(100);
-        Keyboard.write(0x20) ;
-        delay(40);
-        Keyboard.write(KEY_BACKSPACE);
-        delay(40); //
-        Keyboard.releaseAll();*/
+        Mouse.releaseAll();
         break;
       case '1':
-        Keyboard.write(KEY_LEFT_SHIFT);
-        Keyboard.write(KEY_LEFT_ARROW);
+
+        Keyboard.press(KEY_LEFT_SHIFT); // Command key in Mac, use KEY_LEFT_CTRL for PcCommand key
+        Mouse.press(MOUSE_MIDDLE);
+
         delay(40);
-        Keyboard.releaseAll();
         break;
       case '2':
-        Keyboard.write(KEY_LEFT_SHIFT);
-        Keyboard.write(KEY_RIGHT_ARROW);
+        Mouse.press(MOUSE_MIDDLE);
         delay(40);
         Keyboard.releaseAll();
         break;
       case '3': // e0 08
-        Keyboard.press(0x20);
+        Keyboard.press(KEY_F6);
         delay(40);
-        Keyboard.release(0x20);
+        Keyboard.release(KEY_F6);
         break;
       case '4': // e008
         Consumer.write(MEDIA_VOLUME_MUTE);
         break;
       case '9': //
-        Serial.println('<');
+        // Serial.println('<');
         Keyboard.press('<');
         delay(40);
         Keyboard.releaseAll();
@@ -180,32 +207,50 @@ void loop()
     case 0:
       if (last < value)
       {
-        Consumer.write(MEDIA_VOLUME_UP);
+        //Consumer.write(MEDIA_VOLUME_UP);
+        Mouse.move( 0,0,2);
       } // Detecting the direction of rotation
         // Replace this line to have a different function when rotating counter-clockwise
       else
       {
-        Consumer.write(MEDIA_VOLUME_DOWN);
+        //Consumer.write(MEDIA_VOLUME_DOWN);
+        Mouse.move( 0,0,-2);
       }
       break;
     case 1:
       if (last < value)
       {
-        Keyboard.press(KEY_LEFT_ARROW);
-        Keyboard.releaseAll();
+        //Keyboard.press(KEY_LEFT_ARROW);
+        Mouse.move( -10,0,0);
+        //Keyboard.releaseAll();
       }
       else
       {
-        Keyboard.press(KEY_RIGHT_ARROW);
-        Keyboard.releaseAll();
+        // Keyboard.press(KEY_RIGHT_ARROW);
+        // Keyboard.releaseAll();
+         Mouse.move( 10,0,0);
+      }
+      break;
+      case 2:
+      if (last < value)
+      {
+        //Keyboard.press(KEY_LEFT_ARROW);
+        Mouse.move( 0,-10,0);
+        //Keyboard.releaseAll();
+      }
+      else
+      {
+        // Keyboard.press(KEY_RIGHT_ARROW);
+        // Keyboard.releaseAll();
+         Mouse.move( 0,10,0);
       }
       break;
     }
 
     // Replace this line to have a different function when rotating clockwise
-    last = value;                    // Refreshing the "last" varible for the next loop with the current value
-    Serial.print("Encoder Value: "); // Text output of the rotation value used manily for debugging (open Tools - Serial Monitor to see it)
-    Serial.println(value);
+    last = value; // Refreshing the "last" varible for the next loop with the current value
+    // Serial.print("Encoder Value: "); // Text output of the rotation value used manily for debugging (open Tools - Serial Monitor to see it)
+    // Serial.println(value);
   }
 
   // This next part handles the rotary encoder BUTTON
@@ -218,40 +263,11 @@ void loop()
     }
     else
       menuId = 0;
-    Serial.print("Menu: ");
-    Serial.println(menuId);
+    // Serial.print("Menu: ");
+    // Serial.println(menuId);
     testdrawchar(menuId);
-
-    // If the button is unpressed, we'll skip to the end of this if block
-    // Serial.print("Button: ");
-    //#define VERBOSECASE(label) case label: Serial.println(#label); break;
-    //  switch (b) {
-    //    case ClickEncoder::Clicked: // Button was clicked once
-    //      Consumer.write(MEDIA_PLAY_PAUSE); // Replace this line to have a different function when clicking button once
-    //      break;
-
-    //   case ClickEncoder::DoubleClicked: // Button was double clicked
-    //     Consumer.write(MEDIA_NEXT); // Replace this line to have a different function when double-clicking
-    //     break;
-    // }
   }
 
   delay(10); // Wait 10 milliseconds, we definitely don't need to detect the rotary encoder any faster than that
   // The end of the loop() function, it will start again from the beggining (the begginging of the loop function, not the whole document)
 }
-
-/*
-    This is just a long comment
-    Here are some fun functions you can use to replace the default behaviour
-    Consumer.write(CONSUMER_BRIGHTNESS_UP);
-    Consumer.write(CONSUMER_BRIGHTNESS_DOWN);
-    Consumer.write(CONSUMER_BROWSER_HOME);
-    Consumer.write(CONSUMER_SCREENSAVER);
-    Consumer.write(HID_CONSUMER_AL_CALCULATOR); //launch calculator :)
-    Consumer.write(HID_CONSUMER_AC_ZOOM_IN);
-    Consumer.write(HID_CONSUMER_AC_SCROLL_UP);
-    CONSUMER_SLEEP = 0x32,
-
-    FULL LIST CAN BE FOUND HERE:
-    https://github.com/NicoHood/HID/blob/master/src/HID-APIs/ConsumerAPI.h
-*/
