@@ -10,7 +10,7 @@
 #include "mykeypad.cpp"
 
 byte menuId = 0;
-byte buton = 0;
+byte encoderGorev = 0;
 char customKey = ' ';
 //#define KEY_F6				0xC7
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -178,6 +178,15 @@ void loop()
       case '4': // e008
         Consumer.write(MEDIA_VOLUME_MUTE);
         break;
+      case '5': // scroll
+        encoderGorev = 0;
+        break;
+      case '6': // x eksen
+        encoderGorev = 1;
+        break;
+      case '7': // y eksen
+        encoderGorev = 2;
+        break;
       case '9': //
         // Serial.println('<');
         Keyboard.press('<');
@@ -207,42 +216,44 @@ void loop()
     case 0:
       if (last < value)
       {
-        //Consumer.write(MEDIA_VOLUME_UP);
-        Mouse.move( 0,0,2);
+        Serial.print(F("encoderGorev:"));
+        Serial.println(encoderGorev);
+        // Consumer.write(MEDIA_VOLUME_UP);
+       encoderGorev==0? Mouse.move(0, 0, -1):encoderGorev==1?Mouse.move(10, 0, 0):Mouse.move(0, 10, 0);
       } // Detecting the direction of rotation
         // Replace this line to have a different function when rotating counter-clockwise
       else
       {
-        //Consumer.write(MEDIA_VOLUME_DOWN);
-        Mouse.move( 0,0,-2);
+        // Consumer.write(MEDIA_VOLUME_DOWN);
+        encoderGorev==0? Mouse.move(0, 0, 1):encoderGorev==1?Mouse.move(-10, 0, 0):Mouse.move(0, -10, 0);
       }
       break;
     case 1:
       if (last < value)
       {
-        //Keyboard.press(KEY_LEFT_ARROW);
-        Mouse.move( -10,0,0);
-        //Keyboard.releaseAll();
+        // Keyboard.press(KEY_LEFT_ARROW);
+        Mouse.move(10, 0, 0);
+        // Keyboard.releaseAll();
       }
       else
       {
         // Keyboard.press(KEY_RIGHT_ARROW);
         // Keyboard.releaseAll();
-         Mouse.move( 10,0,0);
+        Mouse.move(-10, 0, 0);
       }
       break;
-      case 2:
+    case 2:
       if (last < value)
       {
-        //Keyboard.press(KEY_LEFT_ARROW);
-        Mouse.move( 0,-10,0);
-        //Keyboard.releaseAll();
+        // Keyboard.press(KEY_LEFT_ARROW);
+        Mouse.move(0, 10, 0);
+        // Keyboard.releaseAll();
       }
       else
       {
         // Keyboard.press(KEY_RIGHT_ARROW);
         // Keyboard.releaseAll();
-         Mouse.move( 0,10,0);
+        Mouse.move(0, -10, 0);
       }
       break;
     }
