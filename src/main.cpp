@@ -22,7 +22,7 @@ byte rowPins[ROWS] = {7, 6, 5};
 byte colPins[COLS] = {8, 9, 10, 11};
 
 const char hexaKeys[ROWS][COLS] = {
-    {'+', '-', '-', '-'},
+    {'S', 'E', '-', '-'},
     {'1', '2', '3', '4'},
     {'5', '6', '7', '8'}};
 
@@ -153,18 +153,23 @@ void loop()
     case 0: // windows kod
       switch (customKey)
       {
-      case '+': // shift+left-geri
-
+      case 'S': //SCROLL
+encoderGorev = 0;
+        break;
+       
+        
+      case 'E': // escape
         Keyboard.releaseAll();
         Mouse.releaseAll();
         break;
-      case '1':
-
-        Keyboard.press(KEY_LEFT_SHIFT); // Command key in Mac, use KEY_LEFT_CTRL for PcCommand key
-        Mouse.press(MOUSE_MIDDLE);
-
-        delay(40);
+      case '1':// x eksen
+        encoderGorev = 1;
         break;
+         case '5': // y eksen
+        encoderGorev = 2;
+        break;
+       
+       
       case '2':
         Mouse.press(MOUSE_MIDDLE);
         delay(40);
@@ -178,15 +183,8 @@ void loop()
       case '4': // e008
         Consumer.write(MEDIA_VOLUME_MUTE);
         break;
-      case '5': // scroll
-        encoderGorev = 0;
-        break;
-      case '6': // x eksen
-        encoderGorev = 1;
-        break;
-      case '7': // y eksen
-        encoderGorev = 2;
-        break;
+      
+     
       case '9': //
         // Serial.println('<');
         Keyboard.press('<');
