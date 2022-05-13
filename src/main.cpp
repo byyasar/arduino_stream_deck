@@ -11,6 +11,7 @@
 
 byte menuId = 0;
 byte encoderGorev = 0;
+byte mouseGorev = 0;
 char customKey = ' ';
 //#define KEY_F6				0xC7
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -38,19 +39,15 @@ void testdrawchar(byte menuId)
   display.clearDisplay();
   switch (menuId)
   {
-  case 0:
-    display.drawBitmap(0, 0, menuoledillustrator, 128, 64, 1);
+  case 0: // Page-1
 
-    display.display();
-    break;
-  case 1:
-    // display.drawBitmap(0, 0, menu_kodlama, 128, 64, 1);
-    break;
-  case 2:
-    // display.drawBitmap(0, 0, windowslogo, 128, 64, 1);
-    break;
-  case 3:
-    // display.drawBitmap(0, 0, fusion360, 128, 64, 1);
+    
+    int x = 2;
+    int y = 0;
+    encoderGorev == 0 ? display.drawBitmap(x, y, MouseScrollIcon, 24, 24, 1) : encoderGorev == 1 ? display.drawBitmap(x, y, MouseLeftRightIcon, 24, 24, 1)
+                                                                                                 : display.drawBitmap(x, y, MouseUpDownIcon, 24, 24, 1);
+    x = 0;y=26;
+    display.drawBitmap(x, y, MouseIcon, 28, 28, 1);
     break;
   }
 
@@ -67,47 +64,8 @@ void oledTextGoster(char basilanTus)
 
     tusGorev = menuOBX[id - 1];
   }
-  /*
-  void Adafruit_GFX::drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
-                                int16_t w, int16_t h, uint16_t color) {
-
-    int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
-    uint8_t byte = 0;
-
-    startWrite();
-    for (int16_t j = 0; j < h; j++, y++) {
-      for (int16_t i = 0; i < w; i++) {
-        if (i & 7)
-          byte <<= 1;
-        else
-          byte = pgm_read_byte(&bitmap[j * byteWidth + i / 8]);
-        if (byte & 0x80)
-          writePixel(x + i, y, color);
-      }
-    }
-    endWrite();
-  }
-
-
-  */
 
   display.clearDisplay();
-  for (size_t i = 0; i < 32; i++)
-  {
-    for (size_t j = 0; j < 32; j++)
-    {
-      Serial.println(menuoledillustrator[(i * j) + j]);
-
-      if (menuoledillustrator[j * ((32 + 7) / 8) + i / 8] & (1 << (i % 8)))
-      {
-        display.drawPixel(i, j, 1);
-      }
-      else
-      {
-        display.drawPixel(i, j, 0);
-      }
-    }
-  }
 
   // display.drawBitmap(0, 0, menuoledillustrator, 24, 24, 1);
 
@@ -145,31 +103,33 @@ void loop()
   customKey = customKeypad.getKey();
   if (customKey)
   {
-    oledTextGoster(customKey);
-    Serial.println(customKey);
+    // oledTextGoster(customKey);
+    // Serial.println(customKey);
     switch (menuId)
     {
 
     case 0: // windows kod
       switch (customKey)
       {
-      case 'S': //SCROLL
-encoderGorev = 0;
+      case 'S': // SCROLL
+        mouseGorev++;
+        encoderGorev = (mouseGorev % 3);
+        testdrawchar(menuId);
         break;
-       
-        
+
       case 'E': // escape
         Keyboard.releaseAll();
         Mouse.releaseAll();
         break;
-      case '1':// x eksen
+      case '1': // x eksen
         encoderGorev = 1;
+        testdrawchar(menuId);
         break;
-         case '5': // y eksen
+      case '5': // y eksen
         encoderGorev = 2;
+        testdrawchar(menuId);
         break;
-       
-       
+
       case '2':
         Mouse.press(MOUSE_MIDDLE);
         delay(40);
@@ -183,8 +143,7 @@ encoderGorev = 0;
       case '4': // e008
         Consumer.write(MEDIA_VOLUME_MUTE);
         break;
-      
-     
+
       case '9': //
         // Serial.println('<');
         Keyboard.press('<');
@@ -192,15 +151,6 @@ encoderGorev = 0;
         Keyboard.releaseAll();
         break;
       }
-      break;
-    case 1: // uygulama kod
-      break;
-    case 2: // sistem kod
-      break;
-    case 3: // sistem kod
-      break;
-
-    default:
       break;
     }
   }
@@ -211,22 +161,24 @@ encoderGorev = 0;
   { // New value is different than the last one, that means to encoder was rotated
     switch (menuId)
     {
-    case 0:
+    case 0: // Page-1
       if (last < value)
       {
         Serial.print(F("encoderGorev:"));
         Serial.println(encoderGorev);
         // Consumer.write(MEDIA_VOLUME_UP);
-       encoderGorev==0? Mouse.move(0, 0, -1):encoderGorev==1?Mouse.move(10, 0, 0):Mouse.move(0, 10, 0);
+        encoderGorev == 0 ? Mouse.move(0, 0, -1) : encoderGorev == 1 ? Mouse.move(10, 0, 0)
+                                                                     : Mouse.move(0, 10, 0);
       } // Detecting the direction of rotation
         // Replace this line to have a different function when rotating counter-clockwise
       else
       {
         // Consumer.write(MEDIA_VOLUME_DOWN);
-        encoderGorev==0? Mouse.move(0, 0, 1):encoderGorev==1?Mouse.move(-10, 0, 0):Mouse.move(0, -10, 0);
+        encoderGorev == 0 ? Mouse.move(0, 0, 1) : encoderGorev == 1 ? Mouse.move(-10, 0, 0)
+                                                                    : Mouse.move(0, -10, 0);
       }
       break;
-    case 1:
+    case 1: // Page-2
       if (last < value)
       {
         // Keyboard.press(KEY_LEFT_ARROW);
@@ -238,20 +190,6 @@ encoderGorev = 0;
         // Keyboard.press(KEY_RIGHT_ARROW);
         // Keyboard.releaseAll();
         Mouse.move(-10, 0, 0);
-      }
-      break;
-    case 2:
-      if (last < value)
-      {
-        // Keyboard.press(KEY_LEFT_ARROW);
-        Mouse.move(0, 10, 0);
-        // Keyboard.releaseAll();
-      }
-      else
-      {
-        // Keyboard.press(KEY_RIGHT_ARROW);
-        // Keyboard.releaseAll();
-        Mouse.move(0, -10, 0);
       }
       break;
     }
