@@ -8,8 +8,9 @@
 #include "myencoder.cpp"
 #include "mymenuler.cpp"
 #include "mykeypad.cpp"
+#include <Fonts/FreeSansOblique9pt7b.h>
 
-byte menuId = 0;
+byte menuId = 1;
 byte encoderGorev = 0;
 byte mouseGorev = 0;
 char customKey = ' ';
@@ -28,12 +29,41 @@ const char hexaKeys[ROWS][COLS] = {
     {'5', '6', '7', '8'}};
 
 Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
+int sonXisaretci = 1;
+int sonYisaretci = -1;
+
+const byte xEksen[5] = {0, 32, 56, 80, 104};
 
 void timerIsr()
 {
   encoder->service();
 }
+void etrafindaKareOlustur(int x, int y)
+{
+  if (x >= 0 && y >= 0)
+  {
+    sonXisaretci = x;
+    sonYisaretci = y;
 
+    for (int i = 0; i < 4; i++)
+    {
+      display.drawRect(xEksen[i], y, 24, 24, 0);
+    }
+    display.drawRect(x, y, 24, 24, 1);
+    display.display();
+  }
+}
+void oledTextGoster(int x, int y, String mesaj)
+{
+  // display.clearDisplay();
+  display.setTextSize(1);
+  display.setFont(&FreeSansOblique9pt7b);
+  display.setTextColor(WHITE);
+  display.setCursor(x, y);
+  display.println(mesaj);
+  display.display();
+  delay(20);
+}
 void testdrawchar(byte menuId)
 {
   display.clearDisplay();
@@ -41,42 +71,32 @@ void testdrawchar(byte menuId)
   {
   case 0: // Page-1
 
-    
-    int x = 2;
-    int y = 0;
-    encoderGorev == 0 ? display.drawBitmap(x, y, MouseScrollIcon, 24, 24, 1) : encoderGorev == 1 ? display.drawBitmap(x, y, MouseLeftRightIcon, 24, 24, 1)
-                                                                                                 : display.drawBitmap(x, y, MouseUpDownIcon, 24, 24, 1);
-    x = 0;y=26;
-    display.drawBitmap(x, y, MouseIcon, 28, 28, 1);
+    display.drawLine(30, 0, 30, 64, WHITE);   // dik ayırma çizgisi
+    display.drawLine(30, 32, 128, 32, WHITE); // yatay ayırma çizgisi
+    encoderGorev == 0 ? display.drawBitmap(xEksen[0] - 4, 0, MouseScrollIcon, 32, 32, 1) : encoderGorev == 1 ? display.drawBitmap(xEksen[0], 0, MouseLeftRightIcon, 24, 24, 1)
+                                                                                                             : display.drawBitmap(xEksen[0], 0, MouseUpDownIcon, 24, 24, 1);
+    display.drawBitmap(xEksen[0] - 2, 32, MouseIcon, 28, 28, 1);
+    display.drawBitmap(xEksen[1], 0, OrbitIcon, 24, 24, 1);
+    display.drawBitmap(xEksen[2], 0, HandIcon, 24, 24, 1);
+    display.drawBitmap(xEksen[3], 0, ZoomFitIcon, 24, 24, 1);
+    oledTextGoster(xEksen[1] + 2, 60, "Fusion 360");
+
+    break;
+  case 1: // Page-2
+
+    // display.drawLine(0, 0, 30, 64, WHITE);   // dik ayırma çizgisi
+    display.drawLine(0, 32, 128, 32, WHITE); // yatay ayırma çizgisi
+    display.drawBitmap(xEksen[0], 0, P2_Sahne1Icon, 24, 24, 1);
+    display.drawBitmap(xEksen[1], 0, P2_Sahne2Icon, 24, 24, 1);
+    // display.drawBitmap(xEksen[2], 0, HandIcon, 24, 24, 1);
+    // display.drawBitmap(xEksen[3], 0, ZoomFitIcon, 24, 24, 1);
+    oledTextGoster(xEksen[1] + 2, 60, "Obx Studio");
+
     break;
   }
 
   display.display();
   delay(20);
-}
-void oledTextGoster(char basilanTus)
-{
-  String tusGorev = "-Bulunamadı -";
-  int id = basilanTus - 48;
-  switch (menuId)
-  {
-  case 0:
-
-    tusGorev = menuOBX[id - 1];
-  }
-
-  display.clearDisplay();
-
-  // display.drawBitmap(0, 0, menuoledillustrator, 24, 24, 1);
-
-  display.setTextSize(1);              // Normal 1:1 pixel scale
-  display.setTextColor(SSD1306_WHITE); // Draw white text
-  display.setCursor(65, 30);           // Start at top-left corner
-
-  display.println(tusGorev);
-  display.display();
-  delay(1000);
-  testdrawchar(menuId);
 }
 
 void setup()
@@ -96,6 +116,13 @@ void setup()
   last = -1;
   testdrawchar(menuId);
 }
+void klavyemouseSerbestBirak()
+{
+  Keyboard.releaseAll();
+  Mouse.releaseAll();
+
+  delay(40);
+}
 
 void loop()
 {
@@ -108,37 +135,48 @@ void loop()
     switch (menuId)
     {
 
-    case 0: // windows kod
+    case 0: // Fusion 360 Page-1
       switch (customKey)
       {
       case 'S': // SCROLL
         mouseGorev++;
         encoderGorev = (mouseGorev % 3);
         testdrawchar(menuId);
+        if (sonXisaretci >= 0 || sonYisaretci >= 0)
+          etrafindaKareOlustur(sonXisaretci, sonYisaretci);
         break;
 
       case 'E': // escape
-        Keyboard.releaseAll();
-        Mouse.releaseAll();
+        display.drawRect(sonXisaretci, sonYisaretci, 24, 24, 0);
+        display.display();
+        sonXisaretci = -1;
+        sonYisaretci = -1;
+        klavyemouseSerbestBirak();
+        Keyboard.press(KEY_ESC);
         break;
       case '1': // x eksen
-        encoderGorev = 1;
-        testdrawchar(menuId);
-        break;
-      case '5': // y eksen
-        encoderGorev = 2;
-        testdrawchar(menuId);
-        break;
-
-      case '2':
+        klavyemouseSerbestBirak();
+        etrafindaKareOlustur(xEksen[1], 0);
+        Keyboard.press(KEY_LEFT_SHIFT);
         Mouse.press(MOUSE_MIDDLE);
         delay(40);
-        Keyboard.releaseAll();
+        break;
+      case '2':
+        klavyemouseSerbestBirak();
+        etrafindaKareOlustur(xEksen[2], 0);
+        Mouse.press(MOUSE_MIDDLE);
+        delay(40);
         break;
       case '3': // e0 08
+        klavyemouseSerbestBirak();
+        etrafindaKareOlustur(xEksen[3], 0);
         Keyboard.press(KEY_F6);
         delay(40);
         Keyboard.release(KEY_F6);
+        display.drawRect(xEksen[3], 0, 24, 24, 0);
+        display.display();
+        sonXisaretci = -1;
+        sonYisaretci = -1;
         break;
       case '4': // e008
         Consumer.write(MEDIA_VOLUME_MUTE);
@@ -152,6 +190,32 @@ void loop()
         break;
       }
       break;
+    case 1: // Obx Studio Page-2
+    switch (customKey)
+      {
+    
+      case 'E': // escape
+        display.drawRect(sonXisaretci, sonYisaretci, 24, 24, 0);
+        display.display();
+        sonXisaretci = -1;
+        sonYisaretci = -1;
+        klavyemouseSerbestBirak();
+        Keyboard.press(KEY_ESC);
+        break;
+      case '1': // x eksen
+        klavyemouseSerbestBirak();
+        etrafindaKareOlustur(xEksen[0], 0);
+        Keyboard.press(KEY_F13);
+        delay(40);
+        break;
+      case '2':
+        klavyemouseSerbestBirak();
+        etrafindaKareOlustur(xEksen[1], 0);
+        Keyboard.press(KEY_F14);
+        delay(40);
+        break;}
+   
+    break;
     }
   }
   value += encoder->getValue();
@@ -204,15 +268,17 @@ void loop()
   ClickEncoder::Button b = encoder->getButton(); // Asking the button for it's current state
   if (b != ClickEncoder::Open)
   {
-    if (menuId < 3)
+    if (menuId < 1)
     {
       menuId++;
     }
     else
       menuId = 0;
     // Serial.print("Menu: ");
-    // Serial.println(menuId);
+    // Serial.println(menuId); 
+    sonXisaretci=-1;sonYisaretci=-1;
     testdrawchar(menuId);
+   
   }
 
   delay(10); // Wait 10 milliseconds, we definitely don't need to detect the rotary encoder any faster than that
